@@ -1,11 +1,35 @@
 from tkinter import *
 import tkinter.filedialog as filedialog
-from os import walk ,path,startfile
+from os import walk ,path
+import subprocess
 from tkinter import messagebox
 
 
-
 # --------------------------------------function-----------------------------------------
+def open_file_search(address,list_box):
+    list_box.delete(0, END)
+    input_path = filedialog.askopenfile()
+
+    if path.splitext(input_path.name)[1] != '.txt':
+        return messagebox.showerror(title='File', message='File Not Support')
+
+    entry_search_with_file.delete(0,END)
+    entry_search_with_file.insert(0,path.basename(input_path.name))
+    files_search = list(input_path)
+    global list_not_found
+    list_not_found = []
+    for i in range(len(files_search)):
+        files_search[i] = files_search[i].strip()
+        flag = search(address,list_box,files_search[i])
+
+        if not flag:
+            list_not_found.append(files_search[i])
+
+    if len(list_box.get(0,END)) == 0:
+        messagebox.showerror(title='Search', message='File Not Exist')
+
+    
+
 def browse():
     input_path = filedialog.askdirectory()
     entry_address.configure(state='normal')
@@ -38,157 +62,129 @@ def back(list_box):
         break
 
 def search(address,list_box,filesearch):
-    list_box.delete(0, END)
-    if sensitive.get() == 'off':
-        if extention.get() == 'on':
-            if all_file.get() == 'on':
-                list_box.delete(0, END)
+    flag = True
+    len_listbox = len(list_box.get(0,END))
+    if not sensitive.get():
+        if extention.get():
+            if all_file.get():
                 for path_, folders, files in walk(address):
                     for item in files:
                         if item.lower() == filesearch.lower():
                             list_box.insert(0,path_ + '/' + item)
 
-    if sensitive.get() == 'on':
-        if extention.get() == 'off':
-            if all_file.get() == 'on':
-                list_box.delete(0, END)
+    elif sensitive.get():
+        if not extention.get():
+            if all_file.get():
                 for path_, folders, files in walk(address):
                     for item in files:
                         if path.splitext(item)[0] == path.splitext(filesearch)[0]:
                             list_box.insert(0,path_ + '/' + item)
 
-    if sensitive.get() == 'on':
-        if extention.get() == 'on':
-            if all_file.get() == 'off':
-                list_box.delete(0, END)
+    elif sensitive.get():
+        if extention.get():
+            if not all_file.get():
                 for path_, folders, files in walk(address):
                     for item in files:
                         if item.startswith(filesearch):
                             list_box.insert(0,path_ + '/' + item)
 
-    if sensitive.get() == 'off':
-        if extention.get() == 'off':
-            if all_file.get() == 'on':
-                list_box.delete(0, END)
+    elif not sensitive.get():
+        if not extention.get():
+            if all_file.get():
                 for path_, folders, files in walk(address):
                     for item in files:
                         if path.splitext(item.lower())[0] == path.splitext(filesearch.lower())[0]:
                             list_box.insert(0,path_ + '/' + item)
 
-    if sensitive.get() == 'off':
-        if extention.get() == 'on':
-            if all_file.get() == 'off':
-                list_box.delete(0, END)
+    elif not sensitive.get():
+        if extention.get():
+            if not all_file.get():
                 for path_, folders, files in walk(address):
                     for item in files:
                         if filesearch.lower() and item.lower().startswith(filesearch.lower()):
                             list_box.insert(0,path_ + '/' + item)
 
-    if sensitive.get() == 'on':
-        if extention.get() == 'off':
-            if all_file.get() == 'off':
-                list_box.delete(0, END)
+    elif sensitive.get():
+        if not extention.get():
+            if not all_file.get():
                 for path_, folders, files in walk(address):
                     for item in files:
                         if path.splitext(item)[0].startswith(path.splitext(filesearch)[0]):
                             list_box.insert(0,path_ + '/' + item)
 
-    if sensitive.get() == 'off':                    
-        if extention.get() == 'off':
-            if all_file.get() == 'off':
-                list_box.delete(0, END)
+    elif not sensitive.get():
+        if not extention.get():
+            if not all_file.get():
                 for path_, folders, files in walk(address):
                     for item in files:
                         if path.splitext(item.lower())[0].startswith(path.splitext(filesearch.lower())[0]):
                             list_box.insert(0,path_ + '/' + item)
 
-    if sensitive.get() == 'on':                    
-        if extention.get() == 'on':
-            if all_file.get() == 'on':
-                list_box.delete(0, END)
+    elif sensitive.get():                    
+        if extention.get():
+            if all_file.get():
                 for path_, folders, files in walk(address):
                     for item in files:
                         if item == filesearch:
                             list_box.insert(0,path_ + '/' + item)
-    if len(list_box.get(0,END)) == 0:
-        messagebox.showerror(title='Search', message='File Not Exist')
 
+    if len(list_box.get(0,END)) == len_listbox:
+        flag = False
 
-
-def show_maker():
-    messagebox.showinfo("Maker",'Ali Mahdavi, twenty-six years old, has a bachelor\'s degree in chemistry')
+    return flag
 
 
 def  show_function():
-    messagebox.showinfo('How to Use With App','Ali Mahdavi, twenty-six years old, has a bachelor\'s degree in chemistry')
+    messagebox.showinfo('How to Use With App','')
 
 
-def save_too_file(list_box):
-    if len(list_box) == 0:
-        messagebox.showerror(title="Save",message='File Not Exist To Save')
-
+def save(list_,title,message,name):
+    if len(list_) == 0:
+        messagebox.showerror(title=title,message=message)
     else:
-        input_path = filedialog.askdirectory() + '/adress.txt'
+        input_path = filedialog.askdirectory() + f'/{name}.txt'
         try:
-            link = open(input_path,mode='a')
-            for item in list_box:
-                link.write(f'{item}\n')
+            with open(input_path,'a') as file:
+                for item in list_:
+                    file.write(f'{item}\n')
         except:
-            messagebox.showerror(title="Save",message='Not Save To File')
+            messagebox.showerror(title="Save Address",message='Not Save To File')
         else:
-            messagebox.showinfo(title="Save",message='Saved To File')
-        finally:
-            link.close()
-    
-
+            messagebox.showinfo(title="Save Address",message='Saved To File')
 # --------------------------------------function-----------------------------------------
 
 
-
-
-# --------------------------------------class event-----------------------------------------
-class object_event():
-    @staticmethod
-    def click(event):
+# --------------------------------------event-----------------------------------------
+def get_data(event):
         selection = event.widget.curselection()
         if selection:
             index = selection[0]
             data = event.widget.get(index)
-            address_update.set(data)
+            return data
 
-    @staticmethod
-    def double_click(event):
-        selection = event.widget.curselection()
-        if selection:
-            index = selection[0]
-            data = event.widget.get(index)
-            # show(data,list_box_show)
-            if path.isfile(data):
-                a = path.realpath(data)
-                startfile(a)
-            else:
-                show(data,list_box_show)
+def click(event):
+    data = get_data(event)
+    address_update.set(data)
 
-    # @staticmethod
-    # def key_o(event):
-    #     selection = event.widget.curselection()
-    #     if selection:
-    #         index = selection[0]
-    #         data = event.widget.get(index)
-    #         a = path.realpath(data)
-    #         startfile(a)
+def double_click(event):
+    data = get_data(event)
+    if path.isfile(data):
+        a = path.realpath(data)
+        subprocess.call(['xdg-open',a])
+    else:
+        show(data,list_box_show)
 
-    @staticmethod
-    def key_n(event):
-        selection = event.widget.curselection()
-        if selection:
-            index = selection[0]
-            data = event.widget.get(index)
-            test = "/".join(data.split("/")[0:-1])
-            a = path.realpath(test)
-            startfile(a)
-# --------------------------------------class event-----------------------------------------
+# def key_o(event):
+#     data = get_data(event)
+#     a = path.realpath(data)
+#     startfile(a)
 
+def key_n(event):
+    data = get_data(event)
+    test = "/".join(data.split("/")[0:-1])
+    a = path.realpath(test)
+    subprocess.call(['xdg-open',a])
+# --------------------------------------event-----------------------------------------
 
 
 
@@ -197,19 +193,18 @@ class object_event():
 
 window = Tk()
 window.title("Search")
-window.geometry('380x375')
-# window.resizable(width=0,height=0)
-
-
+window.geometry('565x430')
+window.resizable(width=0,height=0)
 
 # --------------------------------------var-----------------------------------------
 address = StringVar()
 file_search = StringVar()
+search_file_name = StringVar()
 address_update = StringVar()
 
-sensitive = StringVar()
-extention = StringVar()
-all_file = StringVar()
+sensitive = BooleanVar()
+extention = BooleanVar()
+all_file = BooleanVar()
 # --------------------------------------var-----------------------------------------
 
 
@@ -221,15 +216,23 @@ label_adress.grid(column=0,row=0,sticky=W+E,padx=(5,5),pady=(2,2))
 label_search = Label(window,text='Search:')
 label_search.config(font=("Calibri", 13))
 label_search.grid(column=0,row=2,sticky=W+E,padx=(5,5),pady=(2,2))
+label_search_with_file = Label(window,text='Search With File:')
+label_search_with_file.config(font=("Calibri", 13))
+label_search_with_file.grid(column=0,row=3,sticky=W+E,padx=(5,5),pady=(2,2))
 # --------------------------------------label-----------------------------------------
 
 
 
 # --------------------------------------entry-----------------------------------------
-entry_address = Entry(window,textvariable=address,state=DISABLED,width=33)
+entry_address = Entry(window,textvariable=address,state='readonly',width=33)
 entry_address.grid(column=1,row=0,padx=(5,5),pady=(2,2),sticky=W+E)
+
 entry_search = Entry(window,textvariable=file_search,width=33)
 entry_search.grid(column=1,row=2,padx=(5,5),pady=(2,2),sticky=W+E)
+
+entry_search_with_file = Entry(window,textvariable=search_file_name,width=33)
+entry_search_with_file.grid(column=1,row=3,padx=(5,5),pady=(2,2),sticky=W+E)
+
 entry_address_update = Entry(window,textvariable=address_update,width=33)
 entry_address_update.grid(column=0,row=9,padx=(5,5),pady=(2,2),sticky=W+E,columnspan = 3)
 # --------------------------------------entry-----------------------------------------
@@ -244,30 +247,33 @@ btn_show.grid(column=0,row=1,padx=(4,1),pady=(2,1),sticky=W+E,columnspan = 3)
 btn_search = Button(window,text='Search',bg='white',fg='black',pady=1,command=lambda:search(address.get(),list_box_show,file_search.get()))
 btn_search.grid(column=2,row=2,padx=(1,1),pady=(2,1),sticky=W+E)
 btn_back = Button(window,text='Back',bg='black',fg='white',pady=2,command=lambda:back(list_box_show))
-btn_back.grid(column=0,row=10,padx=(4,1),pady=(2,1),sticky=W+E,columnspan = 3)
+btn_back.grid(column=0,row=12,padx=(4,1),pady=(2,1),sticky=W+E,columnspan = 3)
+
+btn_search_by_file = Button(window,text='search by file',bg='white',fg='black',pady=1,command=lambda:open_file_search(address.get(),list_box_show))
+btn_search_by_file.grid(column=2,row=3,padx=(1,1),pady=(2,1),sticky=W+E)
 # --------------------------------------botton-----------------------------------------
 
 
 
 # --------------------------------------listbox-----------------------------------------
 list_box_show = Listbox(window,width=40,height=12)
-list_box_show.grid(column=0,row=4,rowspan=4,padx=(5,5),pady=(2,2),sticky=W+E,columnspan = 3)
-list_box_show.bind("<<ListboxSelect>>", object_event.click)
-list_box_show.bind("<Double-Button-1>", object_event.double_click)
-# list_box_show.bind("<Control-o>", object_event.key_o)
-list_box_show.bind("<Control-n>", object_event.key_n)
+list_box_show.grid(column=0,row=5,rowspan=4,padx=(5,5),pady=(2,2),sticky=W+E,columnspan = 3)
+list_box_show.bind("<<ListboxSelect>>", click)
+list_box_show.bind("<Double-Button-1>", double_click)
+# list_box_show.bind("<Control-o>", key_o)
+list_box_show.bind("<Control-n>", key_n)
 # --------------------------------------listbox-----------------------------------------
 
 
 
 # --------------------------------------scroll-----------------------------------------
 scroll_y = Scrollbar(window,orient="vertical")
-scroll_y.grid(column=2,row=4,rowspan=4,padx=(5,5),pady=(2,2),sticky=E+S+N)
+scroll_y.grid(column=2,row=5,rowspan=4,padx=(5,5),pady=(2,2),sticky=E+S+N)
 list_box_show.config(yscrollcommand=scroll_y.set)
 scroll_y.config(command=list_box_show.yview)
 
 scroll_x = Scrollbar(window,orient='horizontal')
-scroll_x.grid(row=7,padx=(5,5),pady=(2,2),sticky=S+W+E,columnspan = 3)
+scroll_x.grid(row=8,padx=(5,5),pady=(2,2),sticky=S+W+E,columnspan = 3)
 list_box_show.config(xscrollcommand=scroll_x.set)
 scroll_x.config(command=list_box_show.xview)
 # --------------------------------------scroll-----------------------------------------
@@ -278,30 +284,27 @@ scroll_x.config(command=list_box_show.xview)
 menu_bar = Menu(window)
 option = Menu(menu_bar,tearoff = 0)
 menu_bar.add_cascade(label ='Option', menu = option)
-option.add_command(label = 'Save',command = lambda: save_too_file(list_box_show.get(0,END)))
+option.add_command(label = 'Save Address',command = lambda: save(list_box_show.get(0,END),"Save Address",'There is no Address to Save','adress'))
+option.add_separator()
+option.add_command(label = 'Save Not Found',command = lambda: save(list_not_found,"Save Not Found",'All files are available','not_found'))
 option.add_separator()
 option.add_command(label = 'Exit', command = lambda : window.destroy())
 
-
 help_ = Menu(menu_bar, tearoff = 0) 
 menu_bar.add_cascade(label ='Help', menu = help_)
-help_.add_command(label = 'Maker', command = lambda:show_maker())
 help_.add_command(label = 'information', command = lambda:show_function())
-
 
 window.config(menu = menu_bar)
 # ------------------------------------menu-------------------------------------------------
 
 
 # ------------------------------------Checkbutton-------------------------------------------------
-checkbtn_case_sensitive = Checkbutton(window,text = 'Case Sensitive',variable =sensitive,offvalue = 'off',onvalue = 'on')
-checkbtn_case_sensitive.grid(column=0,row=3)
-checkbtn_extensions = Checkbutton(window,text = 'Extensions',variable =extention,offvalue = 'off',onvalue = 'on')
-checkbtn_extensions.grid(column=1,row=3)
-checkbtn_all_file = Checkbutton(window,text = 'All File',variable =all_file,offvalue = 'off',onvalue = 'on')
-checkbtn_all_file.grid(column=2,row=3)
-
-
+checkbtn_case_sensitive = Checkbutton(window,text = 'Case Sensitive',variable =sensitive)
+checkbtn_case_sensitive.grid(column=0,row=4)
+checkbtn_extensions = Checkbutton(window,text = 'Extensions',variable =extention)
+checkbtn_extensions.grid(column=1,row=4)
+checkbtn_all_file = Checkbutton(window,text = 'All File',variable =all_file)
+checkbtn_all_file.grid(column=2,row=4)
 # ------------------------------------Checkbutton-------------------------------------------------
 
 
